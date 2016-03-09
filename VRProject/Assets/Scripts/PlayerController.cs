@@ -5,7 +5,10 @@ public class PlayerController : MonoBehaviour
 {
     Rigidbody rb;
     public GameObject cam;
-    public float speed = 1f;
+    public float Speed = 1f;
+    public float Step = 2f;
+
+    private bool isColliding = false;
 
 	// Use this for initialization
 	void Start ()
@@ -16,18 +19,77 @@ public class PlayerController : MonoBehaviour
 	// Update is called once per frame
 	void Update ()
     {
-	    if(Input.GetAxis("Vertical") > 0)
-        {
-            MoveForward();
-        }
-	}
+        UpdateMove();
+    }
 
-    void MoveForward()
+    void UpdateMove()
     {
-        Vector3 moveTo = cam.transform.position + new Vector3(cam.transform.forward.x, 0, cam.transform.forward.z);
-        Vector3 movePosition = Vector3.MoveTowards(transform.position, moveTo, Time.deltaTime*speed);
+        Vector3 moveTo = Vector3.zero;
+        if (Input.GetAxis("Vertical") > 0)
+            moveTo += MoveForward();
+        if (Input.GetAxis("Vertical") < 0)
+            moveTo += MoveBackward();
+        if (Input.GetAxis("Horizontal") > 0)
+            moveTo += MoveRightward();
+        if (Input.GetAxis("Horizontal") < 0)
+            moveTo += MoveLeftward();
+        if (moveTo != Vector3.zero)
+            Move(moveTo);
+    }
+
+    Vector3 MoveForward()
+    {
+        Vector3 moveTo = new Vector3(cam.transform.forward.x, 0, cam.transform.forward.z);
+        return moveTo;
+    }
+
+    Vector3 MoveBackward()
+    {
+        Vector3 moveTo = new Vector3(-cam.transform.forward.x, 0, -cam.transform.forward.z);
+        return moveTo;
+    }
+
+    Vector3 MoveLeftward()
+    {
+        Vector3 moveTo = new Vector3(-cam.transform.right.x, 0, -cam.transform.right.z);
+        return moveTo;
+    }
+
+    Vector3 MoveRightward()
+    {
+        Vector3 moveTo = new Vector3(cam.transform.right.x, 0, cam.transform.right.z);
+        return moveTo;
+    }
+
+    bool IsMovePossible(Vector3 moveTo)
+    {
+        return !Physics.Raycast(transform.position, new Vector3(moveTo.x, -0.5f, moveTo.z), 1);
+    }
+
+    void Move(Vector3 moveTo)
+    {
+        Vector3 camPosition = new Vector3(cam.transform.position.x, 0, cam.transform.position.z);
+        Vector3 step = new Vector3(0, Step, 0);
+        Vector3 movePosition = transform.position;
+        bool movePossible = true;
+        if (isColliding)
+            movePossible = IsMovePossible(moveTo);
+        if (movePossible)
+            movePosition = Vector3.MoveTowards(transform.position, camPosition + moveTo + step, Time.deltaTime * Speed);
+        else
+            movePosition = Vector3.MoveTowards(transform.position, camPosition + moveTo, Time.deltaTime * 0.5f);
         transform.position = movePosition;
-        //if(rb.velocity.x < 1 && rb.velocity.z < 1)
-            //rb.AddForce(new Vector3(cam.transform.forward.x, 0, cam.transform.forward.z)*10f);
+    }
+
+    void OnCollisionEnter(Collision collision)
+    {
+        if(!collision.gameObject.tag.Equals("Floor"))
+            isColliding = true;
+    }
+
+    void OnCollisionExit(Collision collision)
+    {
+        if (!collision.gameObject.tag.Equals("Floor"))
+            isColliding = false;
     }
 }
