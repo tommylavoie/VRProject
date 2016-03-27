@@ -2,38 +2,68 @@
 using System.Collections;
 
 public class MoveStick : MonoBehaviour {
-    public int maxAngle, minAngle;
-    public int rotationSpeed;
     public Vector3 startRotation;
 
+    public int maxRotationAngle, minRotationAngle;
+    public int rotationSpeed;
     public bool goLeft;
+
     int rotationSideCorrect;
-    float angleTotal;
+    float angleRotationTotal;
+
+
+    public int maxUpAngle, minUpAngle;
+    public int upSpeed;
+    public bool goUp;
+    
+    int upSideCorrect;
+    float angleUpTotal;
+
 
     // Use this for initialization
     void Start () {
         goLeft = true;
+        angleRotationTotal = 0;
+       
+        goUp = true;
+        angleUpTotal = 0;
+
         transform.rotation = Quaternion.Euler(startRotation);
-        angleTotal = 0;
 	}
 	
 	// Update is called once per frame
 	void Update () {
 
-        float step;
+        float stepRotation;
         float newRotationY;
-        
 
-        // On vérifie que l'on dépasse pas les valeurs max 
-        if ( angleTotal >= maxAngle)
+        float stepUp;
+        float newRotationX;
+
+
+        // On vérifie que l'on dépasse pas les valeurs max de rotation
+        if (angleRotationTotal >= maxRotationAngle)
         {
             goLeft = true;
         }
 
-        else if (angleTotal<=minAngle)
+        else if (angleRotationTotal <= minRotationAngle)
         {
             goLeft = false;
         }
+
+        //On fait de meme pour de bas en haut
+        if (angleUpTotal >= maxUpAngle)
+        {
+            goUp = true;
+        }
+
+        else if (angleUpTotal <= minUpAngle)
+        {
+            goUp = false;
+        }
+
+
 
         // On définie le sens de roation de la canne
         if (goLeft)
@@ -44,20 +74,31 @@ public class MoveStick : MonoBehaviour {
         {
             rotationSideCorrect = 1;
         }
-            
-        
+
+        if (goUp)
+        {
+            upSideCorrect = -1;
+        }
+        else
+        {
+            upSideCorrect = 1;
+        }
+
         //On calcul l'angle de rotation à ajouter
-        step = rotationSideCorrect * rotationSpeed * Time.deltaTime;
+        stepRotation = rotationSideCorrect * rotationSpeed * Time.deltaTime;
+        stepUp = upSideCorrect * upSpeed * Time.deltaTime;
+
 
         //On met à jour la rotation et l'angle total
-        angleTotal = angleTotal + step;
-        newRotationY = transform.eulerAngles.y + step;
+        angleRotationTotal = angleRotationTotal + stepRotation;
+        newRotationY = transform.eulerAngles.y + stepRotation;
 
-        transform.rotation = Quaternion.Euler(new Vector3(transform.eulerAngles.x, newRotationY, transform.eulerAngles.z));
+        angleUpTotal = angleUpTotal + stepUp;
+        newRotationX = transform.eulerAngles.x + stepUp;
+       
+
+        transform.rotation = Quaternion.Euler(new Vector3(newRotationX, newRotationY, transform.eulerAngles.z));
 	}
 
-    void Test( int a)
-    {
-        a =+ 1;
-    }
+    
 }

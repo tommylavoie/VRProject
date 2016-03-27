@@ -94,10 +94,19 @@ public class PlayerController : MonoBehaviour
            
             if (collision.contacts[0].thisCollider.name == this.transform.GetChild(1).GetChild(0).name)
             {
-                Debug.Log("Coucou");
+                
                 myStick = this.transform.GetChild(1).GetChild(0).GetComponentInChildren<MoveStick>();
                 myStick.goLeft = !myStick.goLeft;
+                myStick.goUp = !myStick.goUp;
             }          
+        }
+        else
+        {
+            if (collision.contacts[0].thisCollider.name == this.transform.GetChild(1).GetChild(0).name)
+            {
+                myStick = this.transform.GetChild(1).GetChild(0).GetComponentInChildren<MoveStick>();
+                myStick.goUp = !myStick.goUp;
+            }
         }
     }
 
