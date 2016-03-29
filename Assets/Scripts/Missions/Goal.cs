@@ -18,6 +18,7 @@ public class Goal : MonoBehaviour
 
     public virtual void OnStart()
     {
+        Begin();
         started = true;
     }
 
@@ -38,12 +39,23 @@ public class Goal : MonoBehaviour
 
     public virtual void OnEnd()
     {
+        End();
         done = true;
+    }
+
+    virtual protected void Begin()
+    {
+
     }
 
     virtual protected void Execute()
     {
         
+    }
+
+    virtual protected void End()
+    {
+
     }
 
     public void Complete()
