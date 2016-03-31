@@ -83,8 +83,27 @@ public class PlayerController : MonoBehaviour
 
     void OnCollisionEnter(Collision collision)
     {
-        if(!collision.gameObject.tag.Equals("Floor"))
-			isColliding = true;			
+        MoveStick myStick;
+        if (!collision.gameObject.tag.Equals("Floor"))
+        {
+            isColliding = true;
+           
+            if (collision.contacts[0].thisCollider.name == this.transform.GetChild(1).GetChild(0).name)
+            {
+                
+                myStick = this.transform.GetChild(1).GetChild(0).GetComponentInChildren<MoveStick>();
+                myStick.goLeft = !myStick.goLeft;
+                myStick.goUp = !myStick.goUp;
+            }          
+        }
+        else
+        {
+            if (collision.contacts[0].thisCollider.name == this.transform.GetChild(1).GetChild(0).name)
+            {
+                myStick = this.transform.GetChild(1).GetChild(0).GetComponentInChildren<MoveStick>();
+                myStick.goUp = !myStick.goUp;
+            }
+        }
     }
 
     void OnCollisionExit(Collision collision)
