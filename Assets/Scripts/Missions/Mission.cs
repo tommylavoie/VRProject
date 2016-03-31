@@ -4,6 +4,9 @@ using System.Collections;
 public class Mission : MonoBehaviour
 {
     public GoalComposite goals;
+    public InfoText infoText;
+
+    private bool done = false;
 
     void Start()
     {
@@ -13,7 +16,7 @@ public class Mission : MonoBehaviour
 	// Update is called once per frame
 	void Update ()
     {
-	    if(goals.IsDone())
+	    if(goals.IsDone() && !done)
         {
             OnEnd();
         }
@@ -21,6 +24,7 @@ public class Mission : MonoBehaviour
 
     public void OnEnd()
     {
-
+        infoText.AddNews("Terminé!");
+        done = true;
     }
 }

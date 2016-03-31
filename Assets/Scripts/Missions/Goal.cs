@@ -63,6 +63,11 @@ public class Goal : MonoBehaviour
         completed = true;
     }
 
+    public bool isStarted()
+    {
+        return started;
+    }
+
     public bool IsDone()
     {
         return done;

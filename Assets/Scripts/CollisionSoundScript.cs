@@ -8,6 +8,7 @@ public class CollisionSoundScript : MonoBehaviour
 	public AudioClip collisionPlayerClip = null;
 	public float startingTime = 0.0f;
 	public float durationTime = 0.0f;
+    public float volume = 1f;
 
 	/* Core functions */
 	void Start () 
@@ -57,7 +58,7 @@ public class CollisionSoundScript : MonoBehaviour
 			duration = collisionPlayerClip.length - start;
 		
 		audioSource.clip = collisionPlayerClip;		
-		audioSource.volume = 1.0f;
+		audioSource.volume = volume;
 		audioSource.spatialBlend = 1.0f;
 		audioSource.spatialize = true;
 
