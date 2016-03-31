@@ -1,24 +1,26 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 using System;
+using UnityEngine.UI;
 
-[RequireComponent (typeof (SpriteRenderer))]
+[RequireComponent (typeof (Image))]
 public class BlindnessRenderer : MonoBehaviour
 {
     public List<UnityEngine.Sprite> blindnessSpritesList = new List<UnityEngine.Sprite>();
 
     private int currentSpriteID;
-	private SpriteRenderer spriteRenderer = null;
+	private Image imageRenderer = null;
 	
     void Start()
     {
         currentSpriteID = -1;
+        
     }
 
     void Update()
     {
-		if(spriteRenderer == null)
-			spriteRenderer = this.gameObject.GetComponent<SpriteRenderer>();
+		if(imageRenderer == null)
+			imageRenderer = this.gameObject.GetComponent<Image>();
 		
         if (Input.GetKeyDown("space"))
         {
@@ -29,12 +31,12 @@ public class BlindnessRenderer : MonoBehaviour
 			
 			if(currentSpriteID != -1)
 			{
-				spriteRenderer.enabled = true;     				
-				spriteRenderer.sprite = blindnessSpritesList[currentSpriteID];
+				imageRenderer.enabled = true;     				
+				imageRenderer.sprite = blindnessSpritesList[currentSpriteID];
 			}
 			else
 			{
-				spriteRenderer.enabled = false;        				
+				imageRenderer.enabled = false;        				
 			}    
         }
     }
