@@ -15,7 +15,7 @@ public class BlindnessRenderer : MonoBehaviour
     {
         //currentSpriteID = -1;
         imageRenderer = this.gameObject.GetComponent<Image>();
-        //LoadHandicap();
+        LoadHandicap();
     }
 
     void Update()
