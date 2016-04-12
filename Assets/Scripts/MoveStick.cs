@@ -95,10 +95,7 @@ public class MoveStick : MonoBehaviour {
 
         angleUpTotal = angleUpTotal + stepUp;
         newRotationX = transform.eulerAngles.x + stepUp;
-       
 
         transform.rotation = Quaternion.Euler(new Vector3(newRotationX, newRotationY, transform.eulerAngles.z));
-	}
-
-    
+    }
 }
