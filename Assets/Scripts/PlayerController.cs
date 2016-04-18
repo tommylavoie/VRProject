@@ -7,6 +7,9 @@ public class PlayerController : MonoBehaviour
     public GameObject cam;
     public float Speed = 1f;
     public float Step = 2f;
+    
+    public MoveStick playerStick = null;
+    private Vector3 playerStickRelativePosition = new Vector3(0.0f, 0.0f, 0.0f);
 
     private bool isColliding = false;
 
@@ -14,6 +17,9 @@ public class PlayerController : MonoBehaviour
 	void Start ()
     {
         rb = GetComponent<Rigidbody>();
+
+        if (this.playerStick != null)
+            this.playerStickRelativePosition = this.playerStick.transform.position - this.transform.position;
     }
 	
 	// Update is called once per frame
@@ -25,14 +31,20 @@ public class PlayerController : MonoBehaviour
     void UpdateMove()
     {
         Vector3 moveTo = Vector3.zero;
+
+        /* Vertical move */
         if (Input.GetAxis("Vertical") > 0)
             moveTo += MoveForward();
-        if (Input.GetAxis("Vertical") < 0)
+        else if (Input.GetAxis("Vertical") < 0)
             moveTo += MoveBackward();
+
+        /* Horizontal move */
         if (Input.GetAxis("Horizontal") > 0)
             moveTo += MoveRightward();
-        if (Input.GetAxis("Horizontal") < 0)
+        else if (Input.GetAxis("Horizontal") < 0)
             moveTo += MoveLeftward();
+
+        /* Call to moving function */
         if (moveTo != Vector3.zero)
             Move(moveTo);
     }
@@ -42,19 +54,16 @@ public class PlayerController : MonoBehaviour
         Vector3 moveTo = new Vector3(cam.transform.forward.x, 0, cam.transform.forward.z);
         return moveTo;
     }
-
     Vector3 MoveBackward()
     {
         Vector3 moveTo = new Vector3(-cam.transform.forward.x, 0, -cam.transform.forward.z);
         return moveTo;
     }
-
     Vector3 MoveLeftward()
     {
         Vector3 moveTo = new Vector3(-cam.transform.right.x, 0, -cam.transform.right.z);
         return moveTo;
     }
-
     Vector3 MoveRightward()
     {
         Vector3 moveTo = new Vector3(cam.transform.right.x, 0, cam.transform.right.z);
@@ -63,7 +72,7 @@ public class PlayerController : MonoBehaviour
 
     bool IsMovePossible(Vector3 moveTo)
     {
-        return !Physics.Raycast(transform.position, new Vector3(moveTo.x, -0.5f, moveTo.z), 1);
+        return !Physics.Raycast(transform.position + this.playerStickRelativePosition, new Vector3(moveTo.x, -0.5f, moveTo.z), 1);
     }
 
     void Move(Vector3 moveTo)
@@ -72,36 +81,43 @@ public class PlayerController : MonoBehaviour
         Vector3 step = new Vector3(0, Step, 0);
         Vector3 movePosition = transform.position;
         bool movePossible = true;
+
         if (isColliding)
             movePossible = IsMovePossible(moveTo);
         if (movePossible)
             movePosition = Vector3.MoveTowards(transform.position, camPosition + moveTo + step, Time.deltaTime * Speed);
         else
             movePosition = Vector3.MoveTowards(transform.position, camPosition + moveTo, Time.deltaTime * 0.5f);
+
         transform.position = movePosition;
+
+        if (this.playerStick != null)
+        {
+            Transform stickTransform = this.playerStick.transform;
+            stickTransform.position = movePosition + playerStickRelativePosition;
+        }
     }
 
     void OnCollisionEnter(Collision collision)
     {
-        MoveStick myStick;
-        if (!collision.gameObject.tag.Equals("Floor"))
+        if(this.playerStick != null)
         {
-            isColliding = true;
-           
-            if (collision.contacts[0].thisCollider.name == this.transform.GetChild(1).GetChild(0).name)
+            if (!collision.gameObject.tag.Equals("Floor"))
             {
-                
-                myStick = this.transform.GetChild(1).GetChild(0).GetComponentInChildren<MoveStick>();
-                myStick.goLeft = !myStick.goLeft;
-                myStick.goUp = !myStick.goUp;
-            }          
-        }
-        else
-        {
-            if (collision.contacts[0].thisCollider.name == this.transform.GetChild(1).GetChild(0).name)
+                this.isColliding = true;
+
+                if (collision.contacts[0].thisCollider.name == this.playerStick.gameObject.name)
+                {
+                    this.playerStick.goLeft = !this.playerStick.goLeft;
+                    this.playerStick.goUp = !this.playerStick.goUp;
+                }          
+            }
+            else
             {
-                myStick = this.transform.GetChild(1).GetChild(0).GetComponentInChildren<MoveStick>();
-                myStick.goUp = !myStick.goUp;
+                if (collision.contacts[0].thisCollider.name == this.playerStick.gameObject.name)
+                {
+                    this.playerStick.goUp = !this.playerStick.goUp;
+                }
             }
         }
     }
@@ -109,6 +125,6 @@ public class PlayerController : MonoBehaviour
     void OnCollisionExit(Collision collision)
     {
         if (!collision.gameObject.tag.Equals("Floor"))
-            isColliding = false;
+            this.isColliding = false;
     }
 }
