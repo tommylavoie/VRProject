@@ -21,24 +21,43 @@ public class CollisionSoundScript : MonoBehaviour
 	/* Collision functions */
 	void OnCollisionEnter(Collision collision)
     {
-        if(collision.gameObject.tag.Equals("Player"))
-		{
-			if(collisionPlayerClip != null)
-			{
-				Vector3 averageContactPosition = new Vector3(0, 0, 0);
-				
-				foreach (ContactPoint contact in collision.contacts) {
-					averageContactPosition += contact.point;
-				}
-				averageContactPosition /= collision.contacts.Length;
-				
-				PlayAtPosition(averageContactPosition);
-			}				
-		}
+        if (!gameObject.tag.Equals("Floor"))
+        {
+            if (collision.gameObject.tag.Equals("Player"))
+            {
+                PlayCollision(collision);
+            }
+        }
+        else
+        {
+            foreach (ContactPoint p in collision.contacts)
+            {
+                if (p.otherCollider.tag.Equals("Stick"))
+                {
+                    PlayCollision(collision);
+                }
+            }
+        }
     }
 	
     void OnCollisionExit(Collision collision)
     {
+    }
+
+    void PlayCollision(Collision collision)
+    {
+        if (collisionPlayerClip != null)
+        {
+            Vector3 averageContactPosition = new Vector3(0, 0, 0);
+
+            foreach (ContactPoint contact in collision.contacts)
+            {
+                averageContactPosition += contact.point;
+            }
+            averageContactPosition /= collision.contacts.Length;
+
+            PlayAtPosition(averageContactPosition);
+        }
     }
 	
 	/* Sounds functions */
