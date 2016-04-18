@@ -8,9 +8,8 @@ public class CollisionSoundScript : MonoBehaviour
 	public AudioClip collisionPlayerClip = null;
 	public float startingTime = 0.0f;
 	public float durationTime = 0.0f;
-    public float volume = 1f;
 
-	/* Core functions */
+	/* ==== Basic functions ==== */
 	void Start () 
 	{	
 	}	
@@ -18,72 +17,28 @@ public class CollisionSoundScript : MonoBehaviour
 	{
 	}
 
-	/* Collision functions */
-	void OnCollisionEnter(Collision collision)
+    /* ==== Getters ==== */
+    public AudioClip GetCollidingSound()
     {
-        if (!gameObject.tag.Equals("Floor"))
-        {
-            if (collision.gameObject.tag.Equals("Player"))
-            {
-                PlayCollision(collision);
-            }
-        }
-        else
-        {
-            foreach (ContactPoint p in collision.contacts)
-            {
-                if (p.otherCollider.tag.Equals("Stick"))
-                {
-                    PlayCollision(collision);
-                }
-            }
-        }
-    }
-	
-    void OnCollisionExit(Collision collision)
-    {
+        return this.collisionPlayerClip;
     }
 
-    void PlayCollision(Collision collision)
+    public float GetStartingTime()
+    {
+        return this.startingTime;
+    }
+    public float GetEndingTime()
     {
         if (collisionPlayerClip != null)
-        {
-            Vector3 averageContactPosition = new Vector3(0, 0, 0);
-
-            foreach (ContactPoint contact in collision.contacts)
-            {
-                averageContactPosition += contact.point;
-            }
-            averageContactPosition /= collision.contacts.Length;
-
-            PlayAtPosition(averageContactPosition);
-        }
+            return Mathf.Min(this.startingTime + this.durationTime, collisionPlayerClip.length);
+        else
+            return 0.0f;
     }
-	
-	/* Sounds functions */
-	private AudioSource PlayAtPosition(Vector3 playPosition)
-	{
-		GameObject tmpGameObject =  new GameObject("TmpAudio");
-		AudioSource audioSource = tmpGameObject.AddComponent<AudioSource>();
-		
-		tmpGameObject.transform.position = playPosition;
-		
-		float start = 0.0f;
-		if(startingTime < collisionPlayerClip.length)
-			audioSource.time = start = startingTime;	
-		
-		float duration = durationTime;
-		if(durationTime < 0.01f || (collisionPlayerClip.length - start) < duration)
-			duration = collisionPlayerClip.length - start;
-		
-		audioSource.clip = collisionPlayerClip;		
-		audioSource.volume = volume;
-		audioSource.spatialBlend = 1.0f;
-		audioSource.spatialize = true;
-
-		audioSource.Play();
-		Destroy(tmpGameObject, duration);
-
-		return audioSource;
-	}
+    public float GetDuration()
+    {
+        if (collisionPlayerClip != null)
+            return Mathf.Min(this.durationTime, collisionPlayerClip.length-this.startingTime);
+        else
+            return 0.0f;
+    }
 }
