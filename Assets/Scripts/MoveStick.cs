@@ -29,7 +29,7 @@ public class MoveStick : MonoBehaviour {
         angleUpTotal = 0;
 
         transform.rotation = Quaternion.Euler(startRotation);
-	}
+    }
 	
 	// Update is called once per frame
 	void Update () {
@@ -95,7 +95,7 @@ public class MoveStick : MonoBehaviour {
 
         angleUpTotal = angleUpTotal + stepUp;
         newRotationX = transform.eulerAngles.x + stepUp;
-       
+
 
         transform.rotation = Quaternion.Euler(new Vector3(newRotationX, newRotationY, transform.eulerAngles.z));
 	}
