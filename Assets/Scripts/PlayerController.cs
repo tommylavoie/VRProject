@@ -8,7 +8,7 @@ public class PlayerController : MonoBehaviour
     public float Speed = 1f;
     public float Step = 2f;
     
-    public MoveStick playerStick = null;
+    public MoveHand playerHand = null;
     private Vector3 playerStickRelativePosition = new Vector3(0.0f, 0.0f, 0.0f);
 
     private bool isColliding = false;
@@ -18,8 +18,8 @@ public class PlayerController : MonoBehaviour
     {
         rb = GetComponent<Rigidbody>();
 
-        if (this.playerStick != null)
-            this.playerStickRelativePosition = this.playerStick.transform.position - this.transform.position;
+        if (this.playerHand != null)
+            this.playerStickRelativePosition = this.playerHand.transform.position - this.transform.position;
     }
 	
 	// Update is called once per frame
@@ -91,35 +91,17 @@ public class PlayerController : MonoBehaviour
 
         transform.position = movePosition;
 
-        if (this.playerStick != null)
+        if (this.playerHand != null)
         {
-            Transform stickTransform = this.playerStick.transform;
+            Transform stickTransform = this.playerHand.transform;
             stickTransform.position = movePosition + playerStickRelativePosition;
         }
     }
 
     void OnCollisionEnter(Collision collision)
     {
-        if(this.playerStick != null)
-        {
-            if (!collision.gameObject.tag.Equals("Floor"))
-            {
-                this.isColliding = true;
-
-                if (collision.contacts[0].thisCollider.name == this.playerStick.gameObject.name)
-                {
-                    this.playerStick.goLeft = !this.playerStick.goLeft;
-                    this.playerStick.goUp = !this.playerStick.goUp;
-                }          
-            }
-            else
-            {
-                if (collision.contacts[0].thisCollider.name == this.playerStick.gameObject.name)
-                {
-                    this.playerStick.goUp = !this.playerStick.goUp;
-                }
-            }
-        }
+        if (!collision.gameObject.tag.Equals("Floor"))
+            this.isColliding = true;
     }
 
     void OnCollisionExit(Collision collision)
