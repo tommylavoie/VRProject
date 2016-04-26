@@ -13,9 +13,14 @@ public class MoveHand : MonoBehaviour {
     private int horizontalSideCorrect, vertialSideCorrect;
     private float totalHorizontalAngle, totalVerticalAngle;
 
-    public CaneTriggerScript triggerScript = null;
+    public CaneCollisionScript collisionScript = null;
     public Camera playerCamera = null;
-    private Vector3 distanceFromPlayer;
+    private Vector3 distanceFromCamera;
+
+    private float cameraBaseAngleY;
+    private float stickBaseAngleY;
+
+    public bool automaticMoving = false;
 
     /* ==== Basic functions ==== */
     void Start () {
@@ -25,13 +30,42 @@ public class MoveHand : MonoBehaviour {
         totalHorizontalAngle = 0;       
         totalVerticalAngle = 0;
 
-        this.distanceFromPlayer = this.transform.localPosition;
+        this.distanceFromCamera = this.transform.position - this.playerCamera.transform.position;
+        this.cameraBaseAngleY = playerCamera.transform.rotation.eulerAngles.y;
+        this.stickBaseAngleY = this.transform.rotation.eulerAngles.y;
     }
 	void Update () {
+        /* Move the hand */
+        this.Move();
+    }
 
-        float horizontalStep;
-        float verticalStep;
+    /* ==== Movement helpers ==== */
+    private void Move()
+    {
+        float horizontalStep = 0.0f;
+        float verticalStep = 0.0f;
 
+        if (Input.GetButtonDown("SwitchCaneMode"))
+            this.automaticMoving = !this.automaticMoving;
+
+        if (this.automaticMoving)
+            this.ComputeAutomaticRotation(ref horizontalStep, ref verticalStep);
+        else
+            this.ComputeManualRotation(ref horizontalStep, ref verticalStep);
+
+        /* On place le bras au bon endroit (dans le meme "axe" que les yeux) */
+        Vector3 cameraEulerAngles = this.playerCamera.transform.rotation.eulerAngles;
+        float cameraDifferenceAngleY = cameraEulerAngles.y - this.cameraBaseAngleY;
+        Vector3 relativePositionFromCamera = Quaternion.AngleAxis(cameraDifferenceAngleY, Vector3.up) * this.distanceFromCamera;
+        this.transform.position = playerCamera.transform.position + relativePositionFromCamera;
+
+        /* Et on applique la rotation de la canne */
+        Vector3 stickEulerAngles = this.transform.eulerAngles;
+        Vector3 rotationVector = new Vector3(stickEulerAngles.x + verticalStep, cameraEulerAngles.y + totalHorizontalAngle, stickEulerAngles.z);
+        this.transform.localRotation = Quaternion.Euler(rotationVector);
+    }
+    private void ComputeAutomaticRotation(ref float horizontalStep, ref float verticalStep)
+    {
         // On vérifie que l'on dépasse pas les valeurs max de rotation
         if (totalHorizontalAngle >= maxHorizontalAngle)
             goLeft = true;
@@ -43,7 +77,7 @@ public class MoveHand : MonoBehaviour {
             goUp = true;
         else if (totalVerticalAngle <= minVerticalAngle)
             goUp = false;
-        
+
         // On définie le sens de rotation de la canne
         if (goLeft)
             horizontalSideCorrect = -1;
@@ -62,23 +96,51 @@ public class MoveHand : MonoBehaviour {
         //On met à jour la rotation et l'angle total
         totalHorizontalAngle = totalHorizontalAngle + horizontalStep;
         totalVerticalAngle = totalVerticalAngle + verticalStep;
+    }
+    private void ComputeManualRotation(ref float horizontalStep, ref float verticalStep)
+    {
+        float factor, tmpTotalAngle;
 
-        /* On place le bras au bon endroit (dans le meme "axe" que les yeux) */
-        float cameraRotationY = playerCamera.transform.localRotation.eulerAngles.y;
-        Vector3 rotatedPosition = Quaternion.AngleAxis(cameraRotationY, Vector3.up) * this.distanceFromPlayer;
-        this.transform.localPosition = rotatedPosition;
+        if (Input.GetButton("HorizontalCaneMove"))
+        {
+            if (Input.GetAxisRaw("HorizontalCaneMove") > 0)
+                factor = 1.0f;
+            else
+                factor = -1.0f;
 
-        /* Et on applique la rotation de la canne */
-        Vector3 eulerAngles = this.transform.eulerAngles;
-        
-        Vector3 rotationVector = new Vector3(eulerAngles.x + verticalStep, cameraRotationY + 180 + totalHorizontalAngle, eulerAngles.z);
-        this.transform.localRotation = Quaternion.Euler(rotationVector);
+            horizontalStep = factor * horizontalSpeed * Time.deltaTime;
+            tmpTotalAngle = totalHorizontalAngle + horizontalStep;
+
+            if (tmpTotalAngle >= maxHorizontalAngle)
+                horizontalStep = maxHorizontalAngle - totalHorizontalAngle;
+            else if (tmpTotalAngle <= minHorizontalAngle)
+                horizontalStep = minHorizontalAngle - totalHorizontalAngle;
+        }
+        if (Input.GetButton("VerticalCaneMove"))
+        {
+            if (Input.GetAxisRaw("VerticalCaneMove") > 0)
+                factor = -1.0f;
+            else
+                factor = 1.0f;
+
+            verticalStep = factor * verticalSpeed * Time.deltaTime;
+            tmpTotalAngle = totalVerticalAngle + verticalStep;
+
+            if (tmpTotalAngle >= maxVerticalAngle)
+                verticalStep = maxVerticalAngle - totalVerticalAngle;
+            else if (tmpTotalAngle <= minVerticalAngle)
+                verticalStep = minVerticalAngle - totalVerticalAngle;
+        }
+
+        //On met à jour la rotation et l'angle total
+        totalHorizontalAngle = totalHorizontalAngle + horizontalStep;
+        totalVerticalAngle = totalVerticalAngle + verticalStep;
     }
 
     /* ==== Collision functions ==== */
     public bool IsColliding()
     {
-        if (triggerScript == null)    return false;
-        else                          return triggerScript.IsColliding();
+        if (collisionScript == null)    return false;
+        else                          return collisionScript.IsColliding();
     }
 }

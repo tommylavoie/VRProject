@@ -9,28 +9,47 @@ public class PlayerController : MonoBehaviour
     public float Step = 2f;
     
     public MoveHand playerHand = null;
-    private Vector3 playerStickRelativePosition = new Vector3(0.0f, 0.0f, 0.0f);
+    private Vector3 playerHandRelativePosition = new Vector3(0.0f, 0.0f, 0.0f);
+
+    public Transform stickEndEffector = null;
 
     private bool isColliding = false;
+
+    private Vector3 previousPosition;
+    private Vector3 previousStickRelativePosition;
+    public bool hasToReturnToPreviousPosition = false;
 
 	// Use this for initialization
 	void Start ()
     {
         rb = GetComponent<Rigidbody>();
-
-        if (this.playerHand != null)
-            this.playerStickRelativePosition = this.playerHand.transform.position - this.transform.position;
+        this.previousStickRelativePosition = this.playerHand.transform.position - this.transform.position;
     }
 	
 	// Update is called once per frame
-	void Update ()
+	void FixedUpdate ()
     {
-        UpdateMove();
+        if (!hasToReturnToPreviousPosition)
+        {
+            this.previousPosition = this.transform.position;
+            UpdateMove();
+
+            /* Temporal fix for a bug (flying player) */
+            Vector3 fixedPosition = this.transform.position;
+            fixedPosition.y = 1.02f;
+            this.transform.position = fixedPosition;
+        }
     }
 
-    void UpdateMove()
+    public void ReturnToPreviousPosition(Vector3 stickTranslationToPreventCollision)
+    {
+        this.transform.position = this.transform.position + (this.previousPosition - this.transform.position);
+        /*this.hasToReturnToPreviousPosition = true;*/
+    }
+    private void UpdateMove()
     {
         Vector3 moveTo = Vector3.zero;
+        this.previousStickRelativePosition = this.playerHand.transform.position - this.transform.position;
 
         /* Vertical move */
         if (Input.GetAxis("Vertical") > 0)
@@ -43,70 +62,69 @@ public class PlayerController : MonoBehaviour
             moveTo += MoveRightward();
         else if (Input.GetAxis("Horizontal") < 0)
             moveTo += MoveLeftward();
-
+        
         /* Call to moving function */
         if (moveTo != Vector3.zero)
             Move(moveTo);
     }
 
-    Vector3 MoveForward()
+    private Vector3 MoveForward()
     {
-        Vector3 moveTo = new Vector3(cam.transform.forward.x, 0, cam.transform.forward.z);
-        return moveTo;
+        Vector3 cameraEulerAngles = this.cam.transform.rotation.eulerAngles;
+        Vector3 rotatedForward = Quaternion.AngleAxis(cameraEulerAngles.y, Vector3.up) * Vector3.forward;
+        
+        return rotatedForward;
     }
-    Vector3 MoveBackward()
+    private Vector3 MoveBackward()
     {
-        Vector3 moveTo = new Vector3(-cam.transform.forward.x, 0, -cam.transform.forward.z);
-        return moveTo;
+        Vector3 cameraEulerAngles = this.cam.transform.rotation.eulerAngles;
+        Vector3 rotatedBackward = Quaternion.AngleAxis(cameraEulerAngles.y, Vector3.up) * (-1.0f * Vector3.forward);
+
+        return rotatedBackward;
     }
-    Vector3 MoveLeftward()
+    private Vector3 MoveLeftward()
     {
-        Vector3 moveTo = new Vector3(-cam.transform.right.x, 0, -cam.transform.right.z);
-        return moveTo;
+        Vector3 cameraEulerAngles = this.cam.transform.rotation.eulerAngles;
+        Vector3 rotatedLeftward = Quaternion.AngleAxis(cameraEulerAngles.y, Vector3.up) * (-1.0f * Vector3.right);
+
+        return rotatedLeftward;
     }
-    Vector3 MoveRightward()
+    private Vector3 MoveRightward()
     {
-        Vector3 moveTo = new Vector3(cam.transform.right.x, 0, cam.transform.right.z);
-        return moveTo;
+        Vector3 cameraEulerAngles = this.cam.transform.rotation.eulerAngles;
+        Vector3 rotatedRightward = Quaternion.AngleAxis(cameraEulerAngles.y, Vector3.up) * Vector3.right;
+        
+        return rotatedRightward;
     }
 
-    bool IsMovePossible(Vector3 moveTo)
+    private bool IsMovePossible(Vector3 cameraPosition, Vector3 moveTo)
     {
-        return !Physics.Raycast(transform.position + this.playerStickRelativePosition, new Vector3(moveTo.x, -0.5f, moveTo.z), 1);
+        Debug.DrawRay(this.transform.position, moveTo, Color.white, 0.5f);
+        Debug.DrawRay(stickEndEffector.position, stickEndEffector.up * 0.02f, Color.white, 0.5f);
+        Debug.DrawRay(stickEndEffector.position, -1.0f * stickEndEffector.forward * 0.05f, Color.white, 0.5f);
+        
+        bool moveToRaycast = !Physics.Raycast(this.transform.position, moveTo, 1.0f);
+        bool stickUpRaycast = !Physics.Raycast(stickEndEffector.position, stickEndEffector.up, 0.05f);
+        bool stickForwardRaycast = !Physics.Raycast(stickEndEffector.position, -1.0f * stickEndEffector.forward, 0.05f);
+
+        /* Need to be improved : add side raycast ? */
+        if (Input.GetAxis("Vertical") < 0)
+            return moveToRaycast;
+        else
+            return moveToRaycast && (stickUpRaycast && stickForwardRaycast);
     }
 
-    void Move(Vector3 moveTo)
+    private void Move(Vector3 moveTo)
     {
         Vector3 camPosition = new Vector3(cam.transform.position.x, 0, cam.transform.position.z);
         Vector3 step = new Vector3(0, Step, 0);
         Vector3 movePosition = transform.position;
-        bool movePossible = true;
 
-        if (isColliding)
-            movePossible = IsMovePossible(moveTo);
+        bool movePossible = IsMovePossible(camPosition, moveTo);
+
         if (movePossible)
-            movePosition = Vector3.MoveTowards(transform.position, camPosition + moveTo + step, Time.deltaTime * Speed);
-        else
-            movePosition = Vector3.MoveTowards(transform.position, camPosition + moveTo, Time.deltaTime * 0.5f);
+            movePosition = Vector3.MoveTowards(transform.position, camPosition + moveTo + step, Time.fixedDeltaTime  * Speed);
 
         transform.position = movePosition;
-
-        if (this.playerHand != null)
-        {
-            Transform stickTransform = this.playerHand.transform;
-            stickTransform.position = movePosition + playerStickRelativePosition;
-        }
-    }
-
-    void OnCollisionEnter(Collision collision)
-    {
-        if (!collision.gameObject.tag.Equals("Floor"))
-            this.isColliding = true;
-    }
-
-    void OnCollisionExit(Collision collision)
-    {
-        if (!collision.gameObject.tag.Equals("Floor"))
-            this.isColliding = false;
     }
 }

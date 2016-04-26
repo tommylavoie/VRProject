@@ -9,14 +9,6 @@ public class CollisionSoundScript : MonoBehaviour
 	public float startingTime = 0.0f;
 	public float durationTime = 0.0f;
 
-	/* ==== Basic functions ==== */
-	void Start () 
-	{	
-	}	
-	void Update () 
-	{
-	}
-
     /* ==== Getters ==== */
     public AudioClip GetCollidingSound()
     {
@@ -25,19 +17,20 @@ public class CollisionSoundScript : MonoBehaviour
 
     public float GetStartingTime()
     {
-        return this.startingTime;
+        if (this.startingTime > 0.01f)
+            return this.startingTime;
+        else
+            return 0.0f;
     }
     public float GetEndingTime()
     {
         if (collisionPlayerClip != null)
-            return Mathf.Min(this.startingTime + this.durationTime, collisionPlayerClip.length);
-        else
-            return 0.0f;
-    }
-    public float GetDuration()
-    {
-        if (collisionPlayerClip != null)
-            return Mathf.Min(this.durationTime, collisionPlayerClip.length-this.startingTime);
+        {
+            if (this.durationTime > 0.01f)
+                return Mathf.Min(this.startingTime + this.durationTime, collisionPlayerClip.length);
+            else
+                return collisionPlayerClip.length;
+        }
         else
             return 0.0f;
     }

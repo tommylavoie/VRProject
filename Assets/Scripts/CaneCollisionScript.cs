@@ -1,64 +1,97 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class CaneCollisionScript : MonoBehaviour
 {
+    List<GameObject> objectColliding = new List<GameObject>();
 
-	/* ==== Basic functions ==== */
-	void Start (){	
-	}
-	void Update (){	
-	}
+    public MoveHand moveHandScript = null;
+    public PlayerController playerController = null;
+
+    void Update()
+    {
+    } 
 
     /* ==== Collision functions ==== */
-    void OnTriggerEnter(Collider collider)
+    void OnCollisionEnter(Collision collision)
     {
-        CollisionSoundScript collisionSoundScript = collider.gameObject.GetComponent<CollisionSoundScript>() as CollisionSoundScript;
-        if (collisionSoundScript != null)
-		{
-            /*Vector3 averageContactPosition = this.DetermineCollisionAveragePoint(collision.contacts);
-            this.PlayAtPosition(collisionSoundScript, averageContactPosition);*/
-		}		
-    }
+        Debug.Log("Enter");
 
-    /* ==== Various helpers ==== */
-    private Vector3 DetermineCollisionAveragePoint(ContactPoint[] contactPoints)
-    {
-        Vector3 averageContactPosition = new Vector3(0, 0, 0);
-        
-        int nbPoints = contactPoints.Length;
-        for (int i = 0; i < nbPoints; i++)
+        GameObject colliderObject = collision.gameObject;
+
+        /* Find the average collision point */
+        Vector3 averagePosition = new Vector3(0.0f, 0.0f, 0.0f);
+        foreach (ContactPoint contact in collision.contacts)
         {
-            averageContactPosition += contactPoints[i].point;
+            averagePosition += contact.point;
+        }
+        averagePosition /= collision.contacts.Length;
+
+        /* Find the distance from thhis point to the collider's AABB */
+        Vector3 closestPoint;
+
+        BoxCollider boxCollider = colliderObject.GetComponent<BoxCollider>();
+        if (boxCollider != null)
+            closestPoint = boxCollider.ClosestPointOnBounds(averagePosition);
+        else
+        {
+            MeshCollider meshCollider = colliderObject.GetComponent<MeshCollider>();
+            closestPoint = meshCollider.ClosestPointOnBounds(averagePosition);
         }
 
-        return (averageContactPosition / (float)nbPoints);
-    }
+        /* And translate the stick to stop the collision */
+        Vector3 stickTranslationToPreventCollision = -2 * (closestPoint - averagePosition);
+        playerController.ReturnToPreviousPosition(stickTranslationToPreventCollision);
 
-    private void PlayAtPosition(CollisionSoundScript soundScript, Vector3 playPosition){
-        AudioClip collidingSound = soundScript.GetCollidingSound();
-        if (collidingSound != null)
+        /* The cane either collides with the floor or an object */
+        if (colliderObject.tag.Equals("Floor"))
+            moveHandScript.goUp = !moveHandScript.goUp;
+        else
         {
-            /* Set time related variabless */
-            float startingTime = soundScript.GetStartingTime();
-            float endingTime = soundScript.GetEndingTime();
-            float duration = soundScript.GetDuration();
-
-            /* Create the audio source and set it */
-            GameObject tmpGameObject = new GameObject("TmpAudio");
-            AudioSource audioSource = tmpGameObject.AddComponent<AudioSource>();
-
-            tmpGameObject.transform.position = playPosition;
-
-            audioSource.clip = collidingSound;
-            audioSource.volume = 1.0f;
-            audioSource.spatialBlend = 1.0f;
-            audioSource.spatialize = true;
-
-            /* Start the playing and add a destroy timer */
-            audioSource.Play();
-            Destroy(tmpGameObject, duration);
+            moveHandScript.goLeft = !moveHandScript.goLeft;
+            moveHandScript.goUp = !moveHandScript.goUp;
         }
+
+        /* Play the sound if there is a special collision sound for this collider */
+        CollisionSoundScript soundScript = colliderObject.GetComponent<CollisionSoundScript>();
+        if (soundScript != null)
+        {
+            AudioClip clip = soundScript.GetCollidingSound();
+            if (clip != null)
+                this.PlayAtPosition(clip, transform.GetChild(0).position, soundScript.GetStartingTime(), soundScript.GetEndingTime());
+        }
+
+        this.objectColliding.Add(colliderObject);
+    }
+    void OnCollisionExit(Collision collision)
+    {
+        Debug.Log("Exit");
+        this.objectColliding.Remove(collision.gameObject);
     }
 
+    public bool IsColliding()
+    {
+        return (objectColliding.Count > 0);
+    }
+
+    /* ==== Sounds functions ==== */
+    private AudioSource PlayAtPosition(AudioClip clip, Vector3 playPosition, float start, float end)
+    {
+        GameObject tmpGameObject = new GameObject("TmpAudio");
+        AudioSource audioSource = tmpGameObject.AddComponent<AudioSource>();
+
+        tmpGameObject.transform.position = playPosition;
+
+        audioSource.time = start;
+        audioSource.clip = clip;
+        audioSource.volume = 0.8f;
+        audioSource.spatialBlend = 1.0f;
+        audioSource.spatialize = true;
+
+        audioSource.Play();        
+        Destroy(tmpGameObject, end - start);
+
+        return audioSource;
+    }
 }
