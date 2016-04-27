@@ -2,6 +2,9 @@
 using System.Collections;
 
 public class MoveHand : MonoBehaviour {
+    /* Movement variables */
+    public bool automaticMoving = false;
+
     public int maxHorizontalAngle, minHorizontalAngle;
     public int horizontalSpeed;
     public bool goLeft;
@@ -13,14 +16,20 @@ public class MoveHand : MonoBehaviour {
     private int horizontalSideCorrect, vertialSideCorrect;
     private float totalHorizontalAngle, totalVerticalAngle;
 
-    public CaneCollisionScript collisionScript = null;
+    /* Camera following variables */ 
     public Camera playerCamera = null;
     private Vector3 distanceFromCamera;
 
     private float cameraBaseAngleY;
     private float stickBaseAngleY;
 
-    public bool automaticMoving = false;
+    /* Falcon following variables */
+    public Transform handTranform = null;
+    public Transform hapticTranform = null;
+    public Transform hapticTargetTransform = null;
+
+    /* Various variables */
+    public CaneCollisionScript collisionScript = null;
 
     /* ==== Basic functions ==== */
     void Start () {
@@ -31,7 +40,7 @@ public class MoveHand : MonoBehaviour {
         totalVerticalAngle = 0;
 
         this.distanceFromCamera = this.transform.position - this.playerCamera.transform.position;
-        this.cameraBaseAngleY = playerCamera.transform.rotation.eulerAngles.y;
+        this.cameraBaseAngleY = this.playerCamera.transform.rotation.eulerAngles.y;
         this.stickBaseAngleY = this.transform.rotation.eulerAngles.y;
     }
 	void Update () {
@@ -57,12 +66,23 @@ public class MoveHand : MonoBehaviour {
         Vector3 cameraEulerAngles = this.playerCamera.transform.rotation.eulerAngles;
         float cameraDifferenceAngleY = cameraEulerAngles.y - this.cameraBaseAngleY;
         Vector3 relativePositionFromCamera = Quaternion.AngleAxis(cameraDifferenceAngleY, Vector3.up) * this.distanceFromCamera;
+
         this.transform.position = playerCamera.transform.position + relativePositionFromCamera;
 
         /* Et on applique la rotation de la canne */
         Vector3 stickEulerAngles = this.transform.eulerAngles;
         Vector3 rotationVector = new Vector3(stickEulerAngles.x + verticalStep, cameraEulerAngles.y + totalHorizontalAngle, stickEulerAngles.z);
         this.transform.localRotation = Quaternion.Euler(rotationVector);
+
+        /* Meme chose pour le game objet Haptic */
+        this.hapticTranform.transform.position = playerCamera.transform.position + relativePositionFromCamera;
+
+        Vector3 hapticEulerAngles = this.hapticTranform.transform.eulerAngles;
+        rotationVector = new Vector3(hapticEulerAngles.x, cameraEulerAngles.y, hapticEulerAngles.z);
+        this.hapticTranform.transform.localRotation = Quaternion.Euler(rotationVector);
+
+        /* On suit l'haptique */
+        handTranform.transform.LookAt(hapticTargetTransform.position);
     }
     private void ComputeAutomaticRotation(ref float horizontalStep, ref float verticalStep)
     {

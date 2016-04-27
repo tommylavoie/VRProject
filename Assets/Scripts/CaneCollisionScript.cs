@@ -57,9 +57,9 @@ public class CaneCollisionScript : MonoBehaviour
         CollisionSoundScript soundScript = colliderObject.GetComponent<CollisionSoundScript>();
         if (soundScript != null)
         {
-            /*AudioClip clip = soundScript.GetCollidingSound();
+            AudioClip clip = soundScript.GetCollidingSound();
             if (clip != null)
-                this.PlayAtPosition(clip, transform.GetChild(0).position, soundScript.GetStartingTime(), soundScript.GetEndingTime());*/
+                this.PlayAtPosition(clip, transform.GetChild(0).position, soundScript.GetStartingTime(), soundScript.GetEndingTime());
         }
 
         this.objectColliding.Add(colliderObject);
