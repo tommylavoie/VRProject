@@ -1,7 +1,7 @@
-[dhdlcImp::dhdlcImp():13.43.56.0001] - Constructor called
-[dhdlcImp::init():13.43.56.0032] - init(,(null))
-[dhdlcImp::init():13.43.56.0038] - dhdOpen() returned -23
-[dhdlcImp::init():13.43.56.1203] - init(15000146,(null))
-[dhdlcImp::init():13.43.56.3613] - dhdOpen() returned 0
-[dhdlcImp::init():13.43.56.4908] - DeviceSN = 15000146
-[dhdlcImp::init():13.43.56.4909] - Returning
+[dhdlcImp::dhdlcImp():23.13.31.0006] - Constructor called
+[dhdlcImp::init():23.13.31.0071] - init(,(null))
+[dhdlcImp::init():23.13.31.0091] - dhdOpen() returned -23
+[dhdlcImp::init():23.13.31.1291] - init(15000146,(null))
+[dhdlcImp::init():23.13.31.3720] - dhdOpen() returned 0
+[dhdlcImp::init():23.13.31.5065] - DeviceSN = 15000146
+[dhdlcImp::init():23.13.31.5066] - Returning
