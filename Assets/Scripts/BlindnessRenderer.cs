@@ -9,12 +9,11 @@ public class BlindnessRenderer : MonoBehaviour
     public List<UnityEngine.Sprite> blindnessSpritesList = new List<UnityEngine.Sprite>();
 
     private int currentSpriteID;
-	private Image imageRenderer = null;
+	public Image imageRenderer = null;
 	
     void Start()
     {
         //currentSpriteID = -1;
-        imageRenderer = this.gameObject.GetComponent<Image>();
         LoadHandicap();
     }
 

@@ -17,6 +17,6 @@ public class Menu : MonoBehaviour {
     public void StartGame(int handicap)
     {
         PlayerPrefs.SetInt("Handicap", handicap);
-        SceneManager.LoadScene("House");
+        SceneManager.LoadScene("MaxScene");
     }
 }
