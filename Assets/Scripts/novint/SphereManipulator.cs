@@ -5,7 +5,8 @@ public class SphereManipulator : MonoBehaviour {
 
 	public int falcon_num = 0;
 	public bool[] button_states = new bool[4];
-	bool [] curr_buttons = new bool[4];
+
+    bool [] curr_buttons = new bool[4];
 	public Vector3 constantforce;
 
 	public Transform hapticTip;
@@ -22,12 +23,21 @@ public class SphereManipulator : MonoBehaviour {
 	
 	private bool haveReceivedTipPosition = false;
 	private int receivedCount = 0;
-	
-	// Use this for initialization
-	void Start () {
-		
-		
-		savedHapticTipToWorldScale = hapticTipToWorldScale;
+
+    /* Variable for Z fixing */
+    private float hapticTipBaseLocalPosZ;
+    private float godObjectBaseLocalPosZ;
+
+    /* Pressed buttons */
+    private bool[] buttonPreviousState = new bool[4];
+    private bool[] buttonJustPressed = new bool[4];
+
+    // Use this for initialization
+    void Start () {
+        this.hapticTipBaseLocalPosZ = this.hapticTip.localPosition.z;
+        this.godObjectBaseLocalPosZ = this.godObject.localPosition.z;
+
+        savedHapticTipToWorldScale = hapticTipToWorldScale;
 		
 		FalconUnity.setForceField(falcon_num,constantforce);
 		
@@ -35,11 +45,22 @@ public class SphereManipulator : MonoBehaviour {
 		tipPositionScale *= hapticTipToWorldScale;
 		
 		FalconUnity.updateHapticTransform(falcon_num, transform.position, transform.rotation, tipPositionScale, useMotionCompensator, 1/60.0f);
-			
-	}
-	
-	// Update is called once per frame
-	void Update () {
+    }
+
+    // Update is called once per frame
+    void Update () {
+        for (int i = 0; i < 4; i++)
+        {
+            if (buttonPreviousState[i] == button_states[i])
+                buttonJustPressed[i] = false;
+            else
+            {
+                if(button_states[i])
+                    buttonJustPressed[i] = true;
+                buttonPreviousState[i] = button_states[i];
+            }
+        }
+
 		
 		if (! haveReceivedTipPosition ) {
 			Vector3 posTip2;
@@ -74,8 +95,8 @@ public class SphereManipulator : MonoBehaviour {
 		}
 			
 		FalconUnity.updateHapticTransform(falcon_num, transform.position, transform.rotation, tipPositionScale, useMotionCompensator, Time.deltaTime);
-		
-		Vector3 posGod;
+
+        Vector3 posGod;
 		bool res = FalconUnity.getGodPosition(falcon_num, out posGod);
 		if(!res){
 //			Debug.Log("Error getting god tip position");
@@ -92,13 +113,16 @@ public class SphereManipulator : MonoBehaviour {
 		godObject.position = posGod;
 		godObject.rotation = new Quaternion(0,0,0,1);
 
+        /* ================================================================= */
+        this.SetLocalPosZ(this.hapticTip, this.hapticTipBaseLocalPosZ);
+        this.SetPositiveLocalPosZ(this.godObject);
+        /* ================================================================= */
+
         //	FalconUnity.setForceField(falcon_num,force);
-
-
     }
-	
-	
-	void LateUpdate() {
+
+
+    void LateUpdate() {
 	
 		bool res = FalconUnity.getFalconButtonStates(falcon_num, out curr_buttons);
 
@@ -118,9 +142,35 @@ public class SphereManipulator : MonoBehaviour {
 			button_states[i] = curr_buttons[i];
 		}
 	}
+
+    private void SetLocalPosZ(Transform t, float value)
+    {
+        Vector3 newPos = t.localPosition;
+        newPos.z = value;
+        t.localPosition = newPos;
+    }
+    private void SetPositiveLocalPosZ(Transform t)
+    {
+        if (t.localPosition.z < 0)
+            this.SetLocalPosZ(t, 0.0f);
+    }
 	
-	
-	void buttonPressed(int i){
+	public void buttonPressed(int i){
+		
+		switch(i){
+		case 0:	
+			break;
+		case 1: 
+			break;
+		case 2:
+			
+			break;
+		case 3:
+			break;
+			
+		}
+	}
+    public void buttonReleased(int i){
 		
 		switch(i){
 		case 0:			
@@ -135,20 +185,40 @@ public class SphereManipulator : MonoBehaviour {
 			
 		}
 	}
-	void buttonReleased(int i){
-		
-		switch(i){
-		case 0:
-			
-			break;
-		case 1: 
-			break;
-		case 2:
-			
-			break;
-		case 3:
-			break;
-			
-		}
-	}	
+
+    /* Buttons pressed (last frame only) */
+    public bool IsTopButtonPressed()
+    {
+        return this.buttonJustPressed[2];
+    }
+    public bool IsRightButtonPressed()
+    {
+        return this.buttonJustPressed[3];
+    }
+    public bool IsBotButtonPressed()
+    {
+        return this.buttonJustPressed[0];
+    }
+    public bool IsLeftButtonPressed()
+    {
+        return this.buttonJustPressed[1];
+    }
+
+    /* Buttons down */
+    public bool IsTopButtonDown()
+    {
+        return this.button_states[2];
+    }
+    public bool IsRightButtonDown()
+    {
+        return this.button_states[3];
+    }
+    public bool IsBotButtonDown()
+    {
+        return this.button_states[0];
+    }
+    public bool IsLeftButtonDown()
+    {
+        return this.button_states[1];
+    }
 }

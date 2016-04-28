@@ -8,16 +8,10 @@ public class CaneCollisionScript : MonoBehaviour
 
     public MoveHand moveHandScript = null;
     public PlayerController playerController = null;
-
-    void Update()
-    {
-    } 
-
+    
     /* ==== Collision functions ==== */
     void OnCollisionEnter(Collision collision)
     {
-        Debug.Log("Enter");
-
         GameObject colliderObject = collision.gameObject;
 
         /* Find the average collision point */
@@ -41,16 +35,19 @@ public class CaneCollisionScript : MonoBehaviour
         }
 
         /* And translate the stick to stop the collision */
-        Vector3 stickTranslationToPreventCollision = -2 * (closestPoint - averagePosition);
+        Vector3 stickTranslationToPreventCollision = averagePosition - closestPoint;
         playerController.ReturnToPreviousPosition(stickTranslationToPreventCollision);
 
         /* The cane either collides with the floor or an object */
-        if (colliderObject.tag.Equals("Floor"))
-            moveHandScript.goUp = !moveHandScript.goUp;
-        else
+        if(moveHandScript.automaticMoving)
         {
-            moveHandScript.goLeft = !moveHandScript.goLeft;
-            moveHandScript.goUp = !moveHandScript.goUp;
+            if (colliderObject.tag.Equals("Floor"))
+                moveHandScript.goUp = !moveHandScript.goUp;
+            else
+            {
+                moveHandScript.goLeft = !moveHandScript.goLeft;
+                moveHandScript.goUp = !moveHandScript.goUp;
+            }
         }
 
         /* Play the sound if there is a special collision sound for this collider */
@@ -66,7 +63,6 @@ public class CaneCollisionScript : MonoBehaviour
     }
     void OnCollisionExit(Collision collision)
     {
-        Debug.Log("Exit");
         this.objectColliding.Remove(collision.gameObject);
     }
 

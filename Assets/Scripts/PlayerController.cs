@@ -3,18 +3,23 @@ using System.Collections;
 
 public class PlayerController : MonoBehaviour
 {
-    Rigidbody rb;
+    /* General variables */
+    private Rigidbody rb;
     public GameObject cam;
     public float Speed = 1f;
     public float Step = 2f;
-    
-    public MoveHand playerHand = null;
-    private Vector3 playerHandRelativePosition = new Vector3(0.0f, 0.0f, 0.0f);
 
+    public SphereManipulator hapticManager;
+
+    /* Hand/Stick variables */
+    public MoveHand playerHand = null;
+    public CaneCollisionScript caneCollisionScript = null;
     public Transform stickEndEffector = null;
 
-    private bool isColliding = false;
+    /* Relative position variables */
+    private Vector3 playerHandRelativePosition = new Vector3(0.0f, 0.0f, 0.0f);
 
+    /* Collision resolving variables (not really used ftm) */
     private Vector3 previousPosition;
     private Vector3 previousStickRelativePosition;
     public bool hasToReturnToPreviousPosition = false;
@@ -29,6 +34,7 @@ public class PlayerController : MonoBehaviour
 	// Update is called once per frame
 	void FixedUpdate ()
     {
+        //Debug.Log(caneCollisionScript.IsColliding());
         if (!hasToReturnToPreviousPosition)
         {
             this.previousPosition = this.transform.position;
@@ -43,25 +49,28 @@ public class PlayerController : MonoBehaviour
 
     public void ReturnToPreviousPosition(Vector3 stickTranslationToPreventCollision)
     {
-        this.transform.position = this.transform.position + (this.previousPosition - this.transform.position);
-        /*this.hasToReturnToPreviousPosition = true;*/
+        /*this.transform.position = this.transform.position + (this.previousPosition - this.transform.position);
+        this.hasToReturnToPreviousPosition = true;*/
     }
     private void UpdateMove()
     {
         Vector3 moveTo = Vector3.zero;
         this.previousStickRelativePosition = this.playerHand.transform.position - this.transform.position;
 
-        /* Vertical move */
-        if (Input.GetAxis("Vertical") > 0)
-            moveTo += MoveForward();
-        else if (Input.GetAxis("Vertical") < 0)
-            moveTo += MoveBackward();
+        bool isForwardDown = (Input.GetAxis("Vertical") > 0);
+        bool isBackwardDown = (Input.GetAxis("Vertical") < 0);
 
-        /* Horizontal move */
-        if (Input.GetAxis("Horizontal") > 0)
-            moveTo += MoveRightward();
-        else if (Input.GetAxis("Horizontal") < 0)
-            moveTo += MoveLeftward();
+        if (this.hapticManager != null)
+        {
+            isForwardDown = (isForwardDown || this.hapticManager.IsTopButtonDown());
+            isBackwardDown = (isBackwardDown || this.hapticManager.IsBotButtonDown());
+        }
+
+        /* Vertical move */
+        if (isForwardDown)
+            moveTo += MoveForward();
+        else if (isBackwardDown)
+            moveTo += MoveBackward();
         
         /* Call to moving function */
         if (moveTo != Vector3.zero)
@@ -99,19 +108,20 @@ public class PlayerController : MonoBehaviour
 
     private bool IsMovePossible(Vector3 cameraPosition, Vector3 moveTo)
     {
-        Debug.DrawRay(this.transform.position, moveTo, Color.white, 0.5f);
-        Debug.DrawRay(stickEndEffector.position, stickEndEffector.up * 0.02f, Color.white, 0.5f);
-        Debug.DrawRay(stickEndEffector.position, -1.0f * stickEndEffector.forward * 0.05f, Color.white, 0.5f);
-        
         bool moveToRaycast = !Physics.Raycast(this.transform.position, moveTo, 1.0f);
-        bool stickUpRaycast = !Physics.Raycast(stickEndEffector.position, stickEndEffector.up, 0.05f);
-        bool stickForwardRaycast = !Physics.Raycast(stickEndEffector.position, -1.0f * stickEndEffector.forward, 0.05f);
 
-        /* Need to be improved : add side raycast ? */
+        bool stickForwardRaycast = !Physics.Raycast(stickEndEffector.position, stickEndEffector.up, 0.005f);
+        bool stickTopRaycast = !Physics.Raycast(stickEndEffector.position, -1.0f * stickEndEffector.forward, 0.055f);
+        bool stickRightRaycast = !Physics.Raycast(stickEndEffector.position, stickEndEffector.right, 0.055f);
+        bool stickBotRaycast = !Physics.Raycast(stickEndEffector.position, stickEndEffector.forward, 0.055f);
+        bool stickLeftRaycast = !Physics.Raycast(stickEndEffector.position, -1.0f * stickEndEffector.right, 0.055f);
+
+        /* If we move backwward : only the player can collide */
         if (Input.GetAxis("Vertical") < 0)
             return moveToRaycast;
+        /* Otherwise it means we move forward : only the stick can collide */
         else
-            return moveToRaycast && (stickUpRaycast && stickForwardRaycast);
+            return stickForwardRaycast && stickTopRaycast && stickBotRaycast && stickRightRaycast && stickLeftRaycast;
     }
 
     private void Move(Vector3 moveTo)

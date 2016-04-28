@@ -3,12 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 
 /* Class AbstractInteractivable : define an abstract class for interactivable objects */
-abstract public class AbstractInteractivable : MonoBehaviour, IInteractivable 
-{
-	/* ==== Public variables ==== */
-	public bool canScientificInteract = true;	
-	public bool canRobotInteract = true;	
-	
+abstract public class AbstractInteractivable : MonoBehaviour, IInteractivable
+{ 	
 	/* Used for holding activators */
 	public float holdingTimeForActivation = 0.0f;
 	
@@ -43,12 +39,6 @@ abstract public class AbstractInteractivable : MonoBehaviour, IInteractivable
 		return this.Interact(callingObject, state);
 	}
 	protected abstract bool Interact(GameObject callingObject, bool state);
-	
-	/*public string GetInteractionDisplayText()
-	{
-		return this.InteractionDisplayText();
-	}
-	protected abstract string InteractionDisplayText();*/
 	
 	/* ==== Authorized Objects functions ==== */
 	public bool IsInteractionAuthorized(GameObject callingObject)

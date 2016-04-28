@@ -22,42 +22,48 @@ public class InteractionManager : MonoBehaviour
 	
 	/* ==== Private variables ==== */ 	
 	private InteractionState interactionState = InteractionState.NotInteracting;
-	private Text interactTextField = null;
+	public Text interactTextField = null;
 	
 	private AbstractInteractivable currentInteractionObject = null;	
 	private float startInteractionTime = 0.0f;
-	
-	/* ==== Start function ==== */
-	void Start () 
+
+    private LayerMask raycastLayerMask;
+
+    public SphereManipulator hapticManager;
+
+    /* ==== Start function ==== */
+    void Start () 
 	{
-		Text[] textFieldsArray = FindObjectsOfType(typeof(Text)) as Text[];
-		foreach(Text tf in textFieldsArray)
-		{
-			if(tf.name.Equals("InteractTextField"))
-				this.interactTextField = tf;				
-		}
-	}
+        this.raycastLayerMask = ~((1 << 8) | (1 << 9) | (1 << 10));
+    }
 	
 	/* ==== Update function ==== */
 	void Update () 
 	{		
 		Camera fpsCamera = Camera.main;
 		if(fpsCamera != null)
-		{			
-			bool interactTextFieldVisibility = false;
-		
-			RaycastHit hitInfo;							
-			if (Physics.Raycast(fpsCamera.transform.position, fpsCamera.transform.TransformDirection(Vector3.forward), out hitInfo, 3)) 
+		{
+            bool interactTextFieldVisibility = false;
+
+            RaycastHit hitInfo;
+            Debug.DrawRay(fpsCamera.transform.position, fpsCamera.transform.forward * 2.5f, Color.green);
+            if (Physics.Raycast(fpsCamera.transform.position, fpsCamera.transform.forward, out hitInfo, 2.5f, this.raycastLayerMask)) 
 			{
 				AbstractInteractivable interactivableObject = hitInfo.collider.gameObject.GetComponent<AbstractInteractivable>();
-
 				if(interactivableObject != null)
-				{
-					if(this.interactionState == InteractionState.NotInteracting)
-					{
-						if(Input.GetButtonDown("Interact"))		
-						{
-							currentInteractionObject = interactivableObject;
+                {
+                    /* Get the interact buttons states */
+                    bool interactButtonPressed = Input.GetButtonDown("Interact");
+
+                    if (this.hapticManager != null)
+                        interactButtonPressed = (interactButtonPressed || this.hapticManager.IsLeftButtonPressed());
+
+                    /* Start the tests */
+                    if (this.interactionState == InteractionState.NotInteracting)
+                    {
+                        if (interactButtonPressed)
+                        {
+                            currentInteractionObject = interactivableObject;
 							
 							if(interactivableObject.holdingTimeForActivation > 0.01f)
 							{								
@@ -70,24 +76,24 @@ public class InteractionManager : MonoBehaviour
 							}								
 						}		
 						else
-						{
-							interactTextFieldVisibility = true;	
+                        {
+                            interactTextFieldVisibility = true;	
 							
 							if(interactivableObject.holdingTimeForActivation > 0.01f)
 							{								
-								interactTextField.text = "Hold E to Interact";			
+								interactTextField.text = "Hold the left button to Interact";			
 							}
 							else
 							{
-								interactTextField.text = "Press E to Interact";									
+								interactTextField.text = "Press the left button to Interact";									
 							}		
 						}	
 					}
 					else if(this.interactionState == InteractionState.PendingInteracting)
-					{
-						if(interactivableObject == currentInteractionObject)
+                    {
+                        if (interactivableObject == currentInteractionObject)
 						{
-							if(Input.GetButton("Interact"))		
+							if(interactButtonPressed)		
 							{
 								if((this.startInteractionTime + interactivableObject.holdingTimeForActivation) < Time.time)
 								{
@@ -97,7 +103,7 @@ public class InteractionManager : MonoBehaviour
 								else
 								{
 									interactTextFieldVisibility = true;		
-									interactTextField.text = "Keep holding E to Interact";											
+									interactTextField.text = "Keep the left button to Interact";											
 								}															
 							}						
 							else
@@ -111,15 +117,15 @@ public class InteractionManager : MonoBehaviour
 						}
 					}
 					else
-					{
-						if(Input.GetButtonDown("Interact"))		
+                    {
+                        if (interactButtonPressed)		
 						{
 							StopTheInteraction();															
 						}						
 						else
 						{
 							interactTextFieldVisibility = true;		
-							interactTextField.text = "Press E to Release";	
+							interactTextField.text = "Press the left button to Release";	
 						}	
 					}				
 				}
