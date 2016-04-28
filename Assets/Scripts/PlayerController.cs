@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UnityEngine.SceneManagement;
 
 public class PlayerController : MonoBehaviour
 {
@@ -37,6 +38,7 @@ public class PlayerController : MonoBehaviour
         //Debug.Log(caneCollisionScript.IsColliding());
         if (!hasToReturnToPreviousPosition)
         {
+            TestReturnToMenu();
             this.previousPosition = this.transform.position;
             UpdateMove();
 
@@ -45,6 +47,12 @@ public class PlayerController : MonoBehaviour
             fixedPosition.y = 1.02f;
             this.transform.position = fixedPosition;
         }
+    }
+
+    void TestReturnToMenu()
+    {
+        if (Input.GetKeyDown(KeyCode.Space))
+            SceneManager.LoadScene("Menu");
     }
 
     public void ReturnToPreviousPosition(Vector3 stickTranslationToPreventCollision)

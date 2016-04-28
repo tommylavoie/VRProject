@@ -25,6 +25,7 @@ public class Mission : MonoBehaviour
     public void OnEnd()
     {
         infoText.AddNews("Terminé!");
+        infoText.AddNews("Appuyez sur Espace pour retourner au menu.");
         done = true;
     }
 }
